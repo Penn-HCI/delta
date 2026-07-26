@@ -9,6 +9,11 @@ const config: Config = {
   ],
   variables: {
     /* @delta-edit:start */
+    m_2: {
+      default: 80,
+      name: "Mass of Person",
+      precision: 0,
+    },
     "\\vec{F}": {
       name: "Gravitational Force",
       precision: 2,
@@ -23,21 +28,12 @@ const config: Config = {
       name: "Mass of Earth",
       sigFigs: 3,
     },
-    m_2: {
-      default: 80,
-      name: "Mass of Person",
-      precision: 0,
-    },
     r: {
       default: 6.371e6,
       name: "Earth's radius",
       sigFigs: 3,
     },
     /* @delta-edit:end */
-  },
-  semantics: function ({ vars }) {
-    var force = (vars.G * vars.m_1 * vars.m_2) / (vars.r * vars.r);
-    vars["\\vec{F}"] = force;
   },
   fontSize: 1.5,
 };

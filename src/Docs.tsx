@@ -1,10 +1,13 @@
 import {
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Github,
   PanelLeftClose,
   PanelLeftOpen,
+  TreePalm,
 } from "lucide-react";
 import {
   useEffect,
@@ -36,6 +39,10 @@ type ConstructItemProps = {
   title: string;
 };
 
+const desktopSidebarWidth = 260;
+const sidebarToggleProximity = 72;
+const sidebarToggleVerticalMargin = 28;
+
 const pageLinks: Array<{ id: DocsPage; label: string; href: string }> = [
   {
     id: "installation",
@@ -55,8 +62,8 @@ const constructAnchors = [
     label: "Formulas & variables",
     constructs: [
       { id: "formula-entries", label: "Formula entries & ids" },
-      { id: "names-and-values", label: "Names & example values" },
-      { id: "latex-variable-keys", label: "Variables & LaTeX keys" },
+      { id: "names-and-values", label: "First annotated variable" },
+      { id: "latex-variable-keys", label: "Remaining variable keys" },
       { id: "number-formatting", label: "Number formatting" },
     ],
   },
@@ -65,12 +72,24 @@ const constructAnchors = [
     label: "Computation & inputs",
     constructs: [
       { id: "semantics", label: "Semantics" },
-      { id: "drag-input", label: "Drag input, range & increment" },
-      { id: "multiple-inputs", label: "Multiple interactive variables" },
-      { id: "kinetic-energy-input", label: "Mass as a second input" },
+      { id: "drag-input", label: "First drag input" },
+      { id: "multiple-inputs", label: "Second drag input" },
     ],
   },
-  { id: "step-constructs", label: "Walkthrough steps" },
+  {
+    id: "step-constructs",
+    label: "Walkthrough steps",
+    constructs: [
+      { id: "step-enable", label: "Enable stepping" },
+      { id: "step-control", label: "Add step controls" },
+      { id: "step-first", label: "First snapshot" },
+      { id: "step-description", label: "Descriptions & labels" },
+      { id: "step-expression", label: "Expression scopes" },
+      { id: "step-formatting", label: "Value formatting" },
+      { id: "step-distance", label: "Distance checkpoint" },
+      { id: "step-force", label: "Final-force checkpoint" },
+    ],
+  },
   { id: "construct-reference", label: "Quick reference" },
 ];
 
@@ -127,6 +146,62 @@ async function copyToClipboard(text: string) {
   }
 }
 
+function InlineCode({ children }: { children: ReactNode }) {
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">(
+    "idle",
+  );
+  const resetTimeout = useRef<number>();
+  const text = String(children);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(resetTimeout.current);
+    },
+    [],
+  );
+
+  const handleCopy = async () => {
+    window.clearTimeout(resetTimeout.current);
+
+    try {
+      await copyToClipboard(text);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("error");
+    }
+
+    resetTimeout.current = window.setTimeout(() => {
+      setCopyStatus("idle");
+    }, 1600);
+  };
+
+  return (
+    <span className="inline-code-shell">
+      <button
+        aria-label={`Copy ${text} to clipboard`}
+        className="inline-code"
+        data-copy-state={copyStatus}
+        onClick={handleCopy}
+        type="button"
+      >
+        <code>{children}</code>
+        <span aria-live="polite" className="inline-code-tooltip" role="status">
+          {copyStatus === "copied" ? (
+            <>
+              <Check aria-hidden="true" size={12} strokeWidth={2} />
+              <span className="sr-only">Copied</span>
+            </>
+          ) : copyStatus === "error" ? (
+            "Retry"
+          ) : (
+            "Copy"
+          )}
+        </span>
+      </button>
+    </span>
+  );
+}
+
 function CodeBlock({
   children,
   language = "plain",
@@ -181,9 +256,9 @@ function CodeBlock({
         type="button"
       >
         {copied ? (
-          <Check aria-hidden="true" size={14} strokeWidth={1.9} />
+          <Check aria-hidden="true" size={13} strokeWidth={1.9} />
         ) : (
-          <Copy aria-hidden="true" size={14} strokeWidth={1.9} />
+          <Copy aria-hidden="true" size={13} strokeWidth={1.9} />
         )}
         <span aria-live="polite" className="sr-only">
           {copied ? "Copied" : copyStatus === "error" ? "Retry" : "Copy"}
@@ -264,11 +339,11 @@ function DocsSidebar({
         <a className="docs-brand" href="#/">
           <span
             aria-hidden="true"
-            className="delta-logo-mark size-9 rounded-lg"
+            className="delta-logo-mark size-8 rounded-lg"
           >
             <img
               alt=""
-              className="h-[21px] w-auto"
+              className="h-[18px] w-auto"
               src={assetUrl("delta-mark.svg")}
             />
           </span>
@@ -278,7 +353,7 @@ function DocsSidebar({
           aria-controls="docs-sidebar"
           aria-expanded="true"
           aria-label="Hide sidebar"
-          className="docs-sidebar-toggle"
+          className="docs-sidebar-toggle docs-sidebar-static-toggle"
           onClick={onHide}
           title="Hide sidebar"
           type="button"
@@ -287,7 +362,7 @@ function DocsSidebar({
         </button>
       </div>
 
-      <nav className="-mx-5 mt-8 border-t border-slate-200 px-5 pt-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+      <nav className="-mx-5 mt-5 border-t border-slate-200 px-5 pt-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <p className="docs-nav-heading">Getting started</p>
         <div className="mt-1 space-y-1">
           {pageLinks.map((link) => (
@@ -384,22 +459,142 @@ function DocsSidebar({
         </div>
       </nav>
 
-      <div className="-mx-5 mt-auto hidden items-center justify-between border-t border-slate-200 px-5 pt-5 text-sm lg:flex">
-        <a className="text-slate-500 hover:text-slate-950" href={playgroundUrl}>
-          Open full playground ↗
-        </a>
-        <a
-          aria-label="View source code on GitHub"
-          className="button-secondary size-10 justify-center p-0"
-          href="https://github.com/ericdai5/delta-dsl"
-          rel="noreferrer"
-          target="_blank"
-          title="Source code on GitHub"
-        >
-          <Github aria-hidden="true" size={19} strokeWidth={1.75} />
-        </a>
+      <div className="docs-sidebar-footer">
+        <div className="docs-sidebar-footer-links">
+          <a
+            className="docs-sidebar-footer-link"
+            href="https://github.com/ericdai5/delta-dsl"
+            rel="noreferrer"
+            target="_blank"
+            title="Source code on GitHub"
+          >
+            <Github aria-hidden="true" size={16} strokeWidth={1.75} />
+            <span>GitHub</span>
+          </a>
+          <a
+            className="docs-sidebar-footer-link"
+            href={playgroundUrl}
+          >
+            <TreePalm aria-hidden="true" size={16} strokeWidth={1.75} />
+            <span>Playground</span>
+          </a>
+        </div>
       </div>
     </aside>
+  );
+}
+
+function SidebarBoundaryToggle({
+  open,
+  onToggle,
+}: {
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const pointerFrame = useRef<number>();
+
+  useEffect(() => {
+    const finePointerQuery = window.matchMedia(
+      "(hover: hover) and (pointer: fine)",
+    );
+
+    const cancelPointerFrame = () => {
+      if (pointerFrame.current === undefined) return;
+      window.cancelAnimationFrame(pointerFrame.current);
+      pointerFrame.current = undefined;
+    };
+
+    const hideToggle = () => {
+      cancelPointerFrame();
+      setVisible(false);
+    };
+
+    const trackPointer = (event: PointerEvent) => {
+      const { clientX, clientY, pointerType } = event;
+      cancelPointerFrame();
+
+      pointerFrame.current = window.requestAnimationFrame(() => {
+        pointerFrame.current = undefined;
+
+        if (
+          pointerType !== "mouse" ||
+          window.innerWidth < 1024 ||
+          !finePointerQuery.matches
+        ) {
+          setVisible(false);
+          return;
+        }
+
+        const boundaryX = open ? desktopSidebarWidth : 0;
+        if (Math.abs(clientX - boundaryX) > sidebarToggleProximity) {
+          setVisible(false);
+          return;
+        }
+
+        const maximumY = Math.max(
+          sidebarToggleVerticalMargin,
+          window.innerHeight - sidebarToggleVerticalMargin,
+        );
+        const toggleY = Math.min(
+          Math.max(clientY, sidebarToggleVerticalMargin),
+          maximumY,
+        );
+
+        buttonRef.current?.style.setProperty(
+          "--docs-sidebar-toggle-y",
+          `${toggleY}px`,
+        );
+        setVisible(true);
+      });
+    };
+
+    window.addEventListener("pointermove", trackPointer, { passive: true });
+    window.addEventListener("blur", hideToggle);
+    window.addEventListener("resize", hideToggle);
+    finePointerQuery.addEventListener("change", hideToggle);
+    document.documentElement.addEventListener("pointerleave", hideToggle);
+
+    return () => {
+      cancelPointerFrame();
+      window.removeEventListener("pointermove", trackPointer);
+      window.removeEventListener("blur", hideToggle);
+      window.removeEventListener("resize", hideToggle);
+      finePointerQuery.removeEventListener("change", hideToggle);
+      document.documentElement.removeEventListener(
+        "pointerleave",
+        hideToggle,
+      );
+    };
+  }, [open]);
+
+  const label = open ? "Hide sidebar" : "Show sidebar";
+
+  return (
+    <button
+      aria-controls="docs-sidebar"
+      aria-expanded={open}
+      aria-label={label}
+      className={`docs-sidebar-toggle docs-sidebar-boundary-toggle ${
+        visible ? "is-visible" : ""
+      }`}
+      onBlur={() => setVisible(false)}
+      onClick={() => {
+        setVisible(false);
+        onToggle();
+      }}
+      onFocus={() => setVisible(true)}
+      ref={buttonRef}
+      title={label}
+      type="button"
+    >
+      {open ? (
+        <ChevronLeft aria-hidden="true" size={15} strokeWidth={1.75} />
+      ) : (
+        <ChevronRight aria-hidden="true" size={15} strokeWidth={1.75} />
+      )}
+    </button>
   );
 }
 
@@ -516,8 +711,8 @@ function ConfigSetupPage() {
         <p>
           Build an interactive formula in five parts: define the config, write
           the LaTeX, declare its variables, add semantics, and render it. The
-          example below creates <code>y = x + 1</code> and connects each layer
-          through the same variable key.
+          example below creates <InlineCode>y = x + 1</InlineCode> and connects
+          each layer through the same variable key.
         </p>
       </DocsHeader>
 
@@ -550,7 +745,8 @@ function ConfigSetupPage() {
           surrounding code is read-only. Delta reparses the editable contents
           after every change and keeps the last valid preview visible while the
           syntax is incomplete. The preview renders with the
-          <code>Provider</code> and <code>Formula</code> components.
+          <InlineCode>Provider</InlineCode> and{" "}
+          <InlineCode>Formula</InlineCode> components.
         </p>
         <ConfigPlayground />
       </section>
@@ -569,19 +765,20 @@ function ConfigSetupPage() {
               <tr>
                 <td>LaTeX</td>
                 <td>
-                  <code>x</code> in <code>&quot;y = x + 1&quot;</code>
+                  <InlineCode>x</InlineCode> in{" "}
+                  <InlineCode>&quot;y = x + 1&quot;</InlineCode>
                 </td>
               </tr>
               <tr>
                 <td>Variables</td>
                 <td>
-                  <code>x: &#123; name, input, … &#125;</code>
+                  <InlineCode>x: &#123; name, input, … &#125;</InlineCode>
                 </td>
               </tr>
               <tr>
                 <td>Semantics</td>
                 <td>
-                  <code>vars.x</code>
+                  <InlineCode>vars.x</InlineCode>
                 </td>
               </tr>
             </tbody>
@@ -629,8 +826,9 @@ function ConstructGuidePage() {
         <div className="construct-group-heading">
           <h2>Formulas and variable annotations</h2>
           <p>
-            Begin with LaTeX, then progressively add names, example values,
-            additional variables, complex keys, and number formatting.
+            Define the formula first. Then annotate one variable, add the
+            remaining exact LaTeX keys, and finish the static configuration
+            with number formatting.
           </p>
         </div>
 
@@ -641,9 +839,10 @@ function ConstructGuidePage() {
             title="Formula entries and matching ids"
             description={
               <p>
-                Every formula has a unique <code>id</code>. The rendered
-                <code>Formula</code> must use that same id inside
-                <code>Provider</code>.
+                Start with only the formula entry. Give it a unique{" "}
+                <InlineCode>id</InlineCode>, then use that same id in the
+                rendered <InlineCode>Formula</InlineCode>. Variables and
+                computation come later.
               </p>
             }
           />
@@ -651,12 +850,13 @@ function ConstructGuidePage() {
           <ConstructItem
             id="names-and-values"
             preset="name-and-value"
-            title="Names and example values"
+            title="Annotate the first variable"
             description={
               <p>
-                <code>name</code> adds an explanatory label.
-                <code>default</code> adds the starting value shown beside it.
-                Variables omitted from the config remain plain notation.
+                Add <InlineCode>m_2</InlineCode> first.{" "}
+                <InlineCode>name</InlineCode> supplies its explanatory label,
+                while <InlineCode>default</InlineCode> supplies the starting
+                value. Every other token remains plain notation for now.
               </p>
             }
           />
@@ -664,12 +864,14 @@ function ConstructGuidePage() {
           <ConstructItem
             id="latex-variable-keys"
             preset="variables"
-            title="More variables and LaTeX keys"
+            title="Add the remaining variables and LaTeX keys"
             description={
               <p>
-                Keys must exactly match the formula. Quote and double-escape
-                LaTeX commands such as <code>\vec</code>; subscripted keys like
-                <code>m_1</code> can be used directly.
+                Keep the existing <InlineCode>m_2</InlineCode> annotation and
+                add the remaining formula tokens. Keys must exactly match the
+                formula: quote and double-escape LaTeX commands such as{" "}
+                <InlineCode>\vec</InlineCode>, while subscripted keys such as{" "}
+                <InlineCode>m_1</InlineCode> can be used directly.
               </p>
             }
           />
@@ -680,9 +882,10 @@ function ConstructGuidePage() {
             title="Format displayed numbers"
             description={
               <p>
-                Use <code>sigFigs</code> for significant figures or
-                <code>precision</code> for decimal places. If both are present,
-                <code>sigFigs</code> takes precedence.
+                With every variable declared, add{" "}
+                <InlineCode>sigFigs</InlineCode> for significant figures and{" "}
+                <InlineCode>precision</InlineCode> for decimal places. If both
+                are present, <InlineCode>sigFigs</InlineCode> takes precedence.
               </p>
             }
           />
@@ -693,8 +896,9 @@ function ConstructGuidePage() {
         <div className="construct-group-heading">
           <h2>Computation and interactive inputs</h2>
           <p>
-            Connect the values with semantics, then selectively expose inputs
-            through direct manipulation.
+            Continue from the completed variable configuration. Compute the
+            output first, make one input draggable, then apply the same input
+            construct to a second variable.
           </p>
         </div>
 
@@ -705,9 +909,10 @@ function ConstructGuidePage() {
             title="Read and write values with semantics"
             description={
               <p>
-                Read inputs from <code>vars</code> and assign computed outputs
-                back to it. Use bracket notation for keys containing LaTeX
-                commands.
+                Add the first computation to the existing static formula. Read
+                values from <InlineCode>vars</InlineCode>, then assign the
+                computed force back to it. Use bracket notation for the LaTeX
+                output key.
               </p>
             }
           />
@@ -715,12 +920,14 @@ function ConstructGuidePage() {
           <ConstructItem
             id="drag-input"
             preset="drag-input"
-            title="Enable drag input, range, and increment"
+            title="Make the first variable draggable"
             description={
               <p>
-                <code>input: &quot;drag&quot;</code> makes the label and formula
-                token draggable. <code>range</code> supplies bounds and
-                <code>step</code> supplies the increment.
+                Keep the computation unchanged and extend{" "}
+                <InlineCode>m_2</InlineCode> with{" "}
+                <InlineCode>input: &quot;drag&quot;</InlineCode>.{" "}
+                <InlineCode>range</InlineCode> supplies its bounds and{" "}
+                <InlineCode>step</InlineCode> supplies its increment.
               </p>
             }
           />
@@ -728,29 +935,17 @@ function ConstructGuidePage() {
           <ConstructItem
             id="multiple-inputs"
             preset="multiple-inputs"
-            title="Make multiple variables interactive"
+            title="Add a second interactive variable"
             description={
               <p>
-                Add the same input properties to any other declared variable.
-                The semantics function automatically reruns whenever either
-                input changes.
+                Preserve the draggable <InlineCode>m_2</InlineCode>, then add
+                the same three input properties to <InlineCode>r</InlineCode>.
+                The existing semantics function automatically reruns when
+                either value changes.
               </p>
             }
           />
 
-          <ConstructItem
-            id="kinetic-energy-input"
-            preset="kinetic-energy"
-            title="Add mass as a second interactive variable"
-            description={
-              <p>
-                Make mass draggable alongside velocity. The semantics function
-                recalculates kinetic energy whenever either value changes. With
-                <code>m = 10</code> and <code>v = 10</code>, the result is
-                <code>500</code>.
-              </p>
-            }
-          />
         </div>
       </section>
 
@@ -758,8 +953,10 @@ function ConstructGuidePage() {
         <div className="construct-group-heading">
           <h2>Step-by-step walkthroughs</h2>
           <p>
-            Collect computation snapshots, add descriptions and labels, and
-            render controls for navigating between them.
+            Enable walkthrough mode and add its controls first. Then collect
+            computation snapshots and progressively enrich them with
+            descriptions, labels, and formatted values. Every{" "}
+            <InlineCode>step()</InlineCode> call creates one snapshot.
           </p>
         </div>
 
@@ -770,8 +967,24 @@ function ConstructGuidePage() {
             title="Enable stepping"
             description={
               <p>
-                Set <code>stepping</code> to collect computation snapshots.
-                Change it to <code>false</code> and the step controls disappear.
+                Set <InlineCode>stepping</InlineCode> to{" "}
+                <InlineCode>true</InlineCode> before creating any snapshots.
+                The semantics function still contains no{" "}
+                <InlineCode>step()</InlineCode> calls at this stage.
+              </p>
+            }
+          />
+
+          <ConstructItem
+            id="step-control"
+            preset="step-control"
+            title="Add the stepping UI"
+            description={
+              <p>
+                Place <InlineCode>StepControl</InlineCode> inside the same
+                provider before adding checkpoints. With no{" "}
+                <InlineCode>step()</InlineCode> calls yet, the controls correctly
+                show that there are no steps.
               </p>
             }
           />
@@ -782,21 +995,9 @@ function ConstructGuidePage() {
             title="Collect the mass-product snapshot"
             description={
               <p>
-                Call <code>step()</code> after a meaningful computation.
+                Call <InlineCode>step()</InlineCode> after a meaningful
+                computation.
                 Variable label keys show the values captured at that moment.
-              </p>
-            }
-          />
-
-          <ConstructItem
-            id="step-loop"
-            preset="step-loop"
-            title="Generate steps in loops and use array values"
-            description={
-              <p>
-                Every <code>step()</code> call becomes a separate snapshot,
-                including calls made inside loops. A variable default may be an
-                array for indexed data.
               </p>
             }
           />
@@ -807,10 +1008,10 @@ function ConstructGuidePage() {
             title="Descriptions and labels serve different roles"
             description={
               <p>
-                <code>description</code> narrates outside the formula and
-                supports inline <code>$LaTeX$</code>. <code>labels</code> attach
-                concrete values or annotations to the formula. Either is
-                optional.
+                Enrich the existing mass-product snapshot without adding
+                another checkpoint. <InlineCode>description</InlineCode>{" "}
+                narrates outside the formula, while{" "}
+                <InlineCode>labels</InlineCode> attach values to it.
               </p>
             }
           />
@@ -822,8 +1023,8 @@ function ConstructGuidePage() {
             description={
               <p>
                 A label key may be an exact LaTeX substring rather than a
-                variable key. Use <code>m_1 m_2</code> to select and label that
-                exact product expression.
+                variable key. Use <InlineCode>m_1 m_2</InlineCode> to select and
+                label that exact product expression.
               </p>
             }
           />
@@ -847,7 +1048,7 @@ function ConstructGuidePage() {
             description={
               <p>
                 Give the second checkpoint its own formatted narration and
-                attach the captured radius value to <code>r</code>.
+                attach the captured radius value to <InlineCode>r</InlineCode>.
               </p>
             }
           />
@@ -864,18 +1065,6 @@ function ConstructGuidePage() {
             }
           />
 
-          <ConstructItem
-            id="step-control"
-            preset="step-control"
-            title="Render navigation for the complete sequence"
-            description={
-              <p>
-                Place <code>StepControl</code> inside the same provider. This
-                preview combines the three checkpoints and supplies start,
-                previous, next, end, and progress controls.
-              </p>
-            }
-          />
         </div>
       </section>
 
@@ -898,11 +1087,11 @@ function ConstructGuidePage() {
               {variableReference.map(([property, purpose, example]) => (
                 <tr key={property}>
                   <td>
-                    <code>{property}</code>
+                    <InlineCode>{property}</InlineCode>
                   </td>
                   <td>{purpose}</td>
                   <td>
-                    <code>{example}</code>
+                    <InlineCode>{example}</InlineCode>
                   </td>
                 </tr>
               ))}
@@ -926,7 +1115,7 @@ function ConstructGuidePage() {
                   <td>{construct}</td>
                   <td>{purpose}</td>
                   <td>
-                    <code>{example}</code>
+                    <InlineCode>{example}</InlineCode>
                   </td>
                 </tr>
               ))}
@@ -976,13 +1165,17 @@ export default function Docs({ page }: DocsProps) {
         onHide={() => setSidebarOpen(false)}
         page={page}
       />
+      <SidebarBoundaryToggle
+        onToggle={() => setSidebarOpen((open) => !open)}
+        open={sidebarOpen}
+      />
       <main className="docs-main">
         {!sidebarOpen && (
           <button
             aria-controls="docs-sidebar"
             aria-expanded="false"
             aria-label="Show sidebar"
-            className="docs-sidebar-restore"
+            className="docs-sidebar-restore docs-sidebar-static-restore"
             onClick={() => setSidebarOpen(true)}
             title="Show sidebar"
             type="button"

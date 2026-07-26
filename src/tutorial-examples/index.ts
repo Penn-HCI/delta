@@ -1,6 +1,5 @@
 import dragInputSource from "./drag-input.tsx?raw";
 import formulaSource from "./formula.tsx?raw";
-import kineticEnergySource from "./kinetic-energy.tsx?raw";
 import linearConfigSource from "./linear-config.tsx?raw";
 import multipleInputsSource from "./multiple-inputs.tsx?raw";
 import nameAndValueSource from "./name-and-value.tsx?raw";
@@ -14,7 +13,6 @@ import stepExpressionSource from "./step-expression.tsx?raw";
 import stepFirstSource from "./step-first.tsx?raw";
 import stepForceSource from "./step-force.tsx?raw";
 import stepFormattingSource from "./step-formatting.tsx?raw";
-import stepLoopSource from "./step-loop.tsx?raw";
 import variablesSource from "./variables.tsx?raw";
 
 const startMarker = "/* @delta-edit:start */";
@@ -32,16 +30,14 @@ const rawExamples = {
   semantics: { source: semanticsSource, formulaHeight: 250 },
   "drag-input": { source: dragInputSource, formulaHeight: 250 },
   "multiple-inputs": { source: multipleInputsSource, formulaHeight: 250 },
-  "kinetic-energy": { source: kineticEnergySource, formulaHeight: 250 },
   "step-enable": { source: stepEnableSource, formulaHeight: 300 },
+  "step-control": { source: stepControlSource, formulaHeight: 300 },
   "step-first": { source: stepFirstSource, formulaHeight: 300 },
-  "step-loop": { source: stepLoopSource, formulaHeight: 300 },
   "step-description": { source: stepDescriptionSource, formulaHeight: 300 },
   "step-expression": { source: stepExpressionSource, formulaHeight: 300 },
   "step-formatting": { source: stepFormattingSource, formulaHeight: 300 },
   "step-distance": { source: stepDistanceSource, formulaHeight: 300 },
   "step-force": { source: stepForceSource, formulaHeight: 300 },
-  "step-control": { source: stepControlSource, formulaHeight: 300 },
 } as const;
 
 export type PlaygroundPreset = keyof typeof rawExamples;

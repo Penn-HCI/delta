@@ -8,6 +8,16 @@ const config: Config = {
     },
   ],
   variables: {
+    m_2: {
+      default: 80,
+      name: "Mass of Person",
+      precision: 0,
+      /* @delta-edit:start */
+      input: "drag",
+      range: [1, 200],
+      step: 1,
+      /* @delta-edit:end */
+    },
     "\\vec{F}": {
       name: "Gravitational Force",
       precision: 2,
@@ -21,16 +31,6 @@ const config: Config = {
       default: 5.972e24,
       name: "Mass of Earth",
       sigFigs: 3,
-    },
-    m_2: {
-      /* @delta-edit:start */
-      input: "drag",
-      default: 80,
-      range: [1, 200],
-      step: 1,
-      name: "Mass of Person",
-      precision: 0,
-      /* @delta-edit:end */
     },
     r: {
       default: 6.371e6,

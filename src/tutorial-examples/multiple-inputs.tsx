@@ -8,6 +8,14 @@ const config: Config = {
     },
   ],
   variables: {
+    m_2: {
+      default: 80,
+      name: "Mass of Person",
+      precision: 0,
+      input: "drag",
+      range: [1, 200],
+      step: 1,
+    },
     "\\vec{F}": {
       name: "Gravitational Force",
       precision: 2,
@@ -22,22 +30,14 @@ const config: Config = {
       name: "Mass of Earth",
       sigFigs: 3,
     },
-    m_2: {
-      input: "drag",
-      default: 80,
-      range: [1, 200],
-      step: 1,
-      name: "Mass of Person",
-      precision: 0,
-    },
     r: {
-      /* @delta-edit:start */
-      input: "drag",
       default: 6.371e6,
-      range: [1e6, 1e7],
-      step: 1e4,
       name: "Earth's radius",
       sigFigs: 3,
+      /* @delta-edit:start */
+      input: "drag",
+      range: [1e6, 1e7],
+      step: 1e4,
       /* @delta-edit:end */
     },
   },
