@@ -2,7 +2,8 @@ import { Brain, Microscope, ScrollText, TreePalm } from "lucide-react";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { OperatorAsciiBackground } from "./components/OperatorAsciiBackground";
-import { assetUrl, playgroundUrl } from "./site";
+import { UnderConstruction } from "./components/UnderConstruction";
+import { assetUrl, playgroundUrl, underConstruction } from "./site";
 
 const Docs = lazy(() => import("./Docs"));
 
@@ -139,6 +140,8 @@ function Footer() {
 
 export default function App() {
   const route = useRoute();
+
+  if (underConstruction) return <UnderConstruction />;
 
   if (route !== "home") {
     return (
