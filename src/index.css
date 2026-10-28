@@ -1,0 +1,804 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Keep the page from scrolling behind an open image lightbox. */
+  html:has(.lightbox[open]) {
+    overflow: hidden;
+  }
+
+  body {
+    @apply m-0 bg-white font-sans text-slate-900 antialiased;
+  }
+
+  /* delta-dsl's stylesheet sets its own font on html, body and #root; the
+     site's font wins because this file is imported after it. */
+  html,
+  body,
+  #root {
+    @apply font-sans;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  code {
+    @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-800;
+  }
+}
+
+@layer components {
+  .site-width {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .inline-code-shell {
+    @apply relative mx-1 inline-flex align-baseline;
+  }
+
+  .inline-code {
+    @apply relative inline-flex appearance-none items-baseline border-0 bg-transparent p-0 text-left focus-visible:outline-none;
+    color: inherit;
+    font: inherit;
+  }
+
+  .inline-code code {
+    @apply cursor-pointer rounded-md border border-slate-200 px-1 py-0 text-[14px] leading-[1.2] text-slate-950 transition-[background-color,border-color,box-shadow];
+  }
+
+  .inline-code:hover code {
+    @apply border-slate-300 bg-slate-200;
+  }
+
+  .inline-code:focus-visible code {
+    box-shadow: 0 0 0 2px rgb(100 116 139 / 35%);
+  }
+
+  .inline-code-tooltip {
+    @apply pointer-events-none absolute bottom-[calc(100%+0.45rem)] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-[11px] leading-none tracking-[0.03em] text-white opacity-0 shadow-sm transition-opacity;
+  }
+
+  .inline-code:hover .inline-code-tooltip,
+  .inline-code:focus-visible .inline-code-tooltip,
+  .inline-code[data-copy-state="copied"] .inline-code-tooltip,
+  .inline-code[data-copy-state="error"] .inline-code-tooltip {
+    @apply opacity-100;
+  }
+
+  .section-title {
+    @apply text-2xl font-medium tracking-tight text-slate-950;
+  }
+
+  /* One heading, at the same weight as the section titles below it. */
+  .home-title {
+    @apply text-xl font-medium leading-snug tracking-tight text-slate-950 sm:text-2xl;
+  }
+
+  /* Clip rather than hide overflow so the sticky header still works. */
+  .home-shell {
+    @apply relative isolate overflow-clip bg-white;
+  }
+
+  .home-shell::after {
+    @apply pointer-events-none absolute inset-y-0 left-1/2 z-[1] -translate-x-1/2;
+    content: "";
+    width: 94%;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(255 255 255 / 55%) 5%,
+      rgb(255 255 255 / 94%) 12%,
+      #fff 20%,
+      #fff 80%,
+      rgb(255 255 255 / 94%) 88%,
+      rgb(255 255 255 / 55%) 95%,
+      transparent 100%
+    );
+  }
+
+  .home-shell > main,
+  .home-shell > footer {
+    @apply relative z-[2];
+  }
+
+  .hero-section {
+    @apply sticky top-0 z-20 bg-white/90 backdrop-blur;
+  }
+
+  .hero-content {
+    @apply relative z-10;
+  }
+
+  .operator-ascii {
+    @apply pointer-events-none absolute inset-0 z-0 flex select-none flex-col justify-around overflow-hidden py-2 font-mono;
+    color: rgb(71 85 105 / 34%);
+  }
+
+  .operator-ascii-row {
+    @apply flex w-max shrink-0 whitespace-pre text-[14px] leading-none tracking-[0.1em];
+    animation:
+      operator-drift-left 224s linear infinite,
+      operator-pulse 7s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+  }
+
+  .operator-ascii-row > span {
+    @apply block shrink-0;
+  }
+
+  .operator-ascii-row:nth-child(even) {
+    animation-name: operator-drift-right, operator-pulse;
+    animation-duration: 267s, 9s;
+  }
+
+  .operator-ascii-row:nth-child(3n) {
+    animation-duration: 192s, 6s;
+  }
+
+  .operator-ascii-row:nth-child(5n) {
+    animation-duration: 245s, 5s;
+  }
+
+  .delta-logo-mark {
+    @apply flex shrink-0 items-center justify-center border border-black;
+    background: linear-gradient(to bottom, #242424, #000);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 20%),
+      inset 0 -1px 0 rgb(0 0 0 / 40%),
+      0 2px 5px rgb(15 23 42 / 24%);
+  }
+
+  /* The negative margin offsets the links' padding so their text stays aligned. */
+  .resource-links {
+    @apply relative -mx-3 flex w-fit flex-col self-start;
+  }
+
+  .resource-link {
+    @apply relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-base text-blue-600 transition-colors hover:text-blue-800;
+  }
+
+  /* A resource that opens in place, styled like the links around it. */
+  .resource-link-button {
+    @apply w-full text-left;
+  }
+
+  /* A link whose URL isn't ready yet: muted text, not clickable. */
+  .resource-link-pending {
+    @apply items-start text-slate-400 hover:text-slate-400;
+  }
+
+  /* Keeps the arrow level with the first line when the tag wraps below. */
+  .resource-link-pending > svg {
+    @apply mt-px;
+  }
+
+  .resource-link-soon {
+    @apply inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs leading-4 text-slate-500;
+  }
+
+  .resource-link-highlight {
+    @apply pointer-events-none absolute inset-x-0 top-0 hidden rounded-lg bg-blue-50 opacity-0;
+    transition:
+      opacity 150ms ease-out,
+      transform 0s,
+      height 0s;
+  }
+
+  .resource-link-highlight[data-visible="true"] {
+    @apply opacity-100;
+  }
+
+  .resource-link-highlight[data-glide="true"] {
+    transition:
+      opacity 150ms ease-out,
+      transform 220ms cubic-bezier(0.2, 0, 0, 1),
+      height 220ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (hover: hover) {
+    .resource-link-highlight {
+      @apply block;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .resource-link-highlight,
+    .resource-link-highlight[data-glide="true"] {
+      transition: none;
+    }
+  }
+
+  .zoomable-thumbnail {
+    @apply block w-full cursor-zoom-in rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-4;
+  }
+
+  /* The video modal reuses the lightbox. The player fills the window at 16:9,
+     up to 80rem wide, and fades and scales in as it opens. */
+  .video-modal-player {
+    @apply relative m-auto block aspect-video rounded-xl bg-slate-950;
+    width: min(100%, 80rem, calc((100dvh - 4rem) * 16 / 9));
+  }
+
+  .video-modal[open] .lightbox-backdrop {
+    animation: video-modal-fade 200ms ease-out;
+  }
+
+  .video-modal[open] .video-modal-player {
+    animation: video-modal-enter 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video-modal[open] .lightbox-backdrop,
+    .video-modal[open] .video-modal-player {
+      animation: none;
+    }
+  }
+
+  .lightbox {
+    @apply fixed inset-0 m-0 h-full max-h-none w-full max-w-none overflow-auto overscroll-contain border-0 bg-transparent p-4 sm:p-8;
+  }
+
+  .lightbox[open] {
+    @apply flex;
+  }
+
+  .lightbox::backdrop {
+    background: transparent;
+  }
+
+  .lightbox-backdrop {
+    @apply fixed inset-0 bg-slate-950/80;
+  }
+
+  /* On phones the image stays wide and the lightbox scrolls sideways. */
+  .lightbox-image {
+    @apply relative m-auto h-auto w-[56rem] max-w-none shrink-0 origin-top-left rounded-xl bg-white;
+  }
+
+  @media (min-width: 640px) {
+    /* Fill the width, or the height when the window is short and wide. */
+    .lightbox-image {
+      width: min(100%, calc((100dvh - 4rem) * var(--lightbox-aspect)));
+    }
+  }
+
+  .lightbox-close {
+    @apply fixed right-4 top-4 flex size-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-md transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
+  }
+
+  .docs-shell {
+    @apply min-h-screen overflow-x-clip bg-white lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-out;
+  }
+
+  .docs-shell.docs-sidebar-hidden {
+    @apply lg:grid-cols-[0_minmax(0,1fr)];
+  }
+
+  .docs-sidebar {
+    @apply flex flex-col border-b border-slate-200 bg-white px-5 py-5 lg:sticky lg:px-6 lg:top-0 lg:z-20 lg:h-screen lg:border-b-0 lg:border-r lg:pb-8 lg:pt-5;
+    transition:
+      opacity 180ms ease,
+      transform 300ms ease;
+  }
+
+  .docs-sidebar.docs-sidebar-collapsed {
+    @apply hidden;
+  }
+
+  @media (min-width: 1024px) {
+    .docs-sidebar {
+      width: 260px;
+    }
+
+    .docs-sidebar.docs-sidebar-collapsed {
+      display: flex;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-100%);
+    }
+  }
+
+  .docs-sidebar-header {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .docs-brand {
+    @apply flex min-w-0 items-center gap-3 text-base text-slate-950;
+  }
+
+  .docs-brand strong {
+    @apply truncate text-base font-medium leading-none;
+  }
+
+  .docs-sidebar-toggle,
+  .docs-sidebar-restore {
+    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+  }
+
+  .docs-sidebar-restore {
+    @apply fixed left-4 top-4 z-30;
+  }
+
+  .docs-sidebar-boundary-toggle {
+    --docs-sidebar-toggle-y: 50vh;
+
+    @apply fixed z-40 hidden size-8;
+    left: 260px;
+    top: var(--docs-sidebar-toggle-y);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    transform-origin: center;
+    will-change: top, transform, opacity;
+    transition:
+      left 300ms ease-out,
+      top 90ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 110ms ease-out,
+      transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .docs-sidebar-hidden .docs-sidebar-boundary-toggle {
+    left: 24px;
+  }
+
+  .docs-sidebar-boundary-toggle.is-visible,
+  .docs-sidebar-boundary-toggle:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+    .docs-sidebar-boundary-toggle {
+      display: inline-flex;
+    }
+
+    .docs-sidebar-static-toggle,
+    .docs-sidebar-static-restore {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .docs-sidebar-boundary-toggle {
+      transition: opacity 110ms linear;
+    }
+  }
+
+  .docs-sidebar-footer {
+    @apply relative -mx-6 -mb-8 mt-auto hidden border-t border-slate-200 lg:block;
+  }
+
+  .docs-sidebar-footer-links {
+    @apply flex flex-col;
+  }
+
+  .docs-sidebar-footer-link {
+    @apply flex h-12 w-full items-center gap-3 px-6 text-[15px] leading-5 text-slate-950 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400;
+  }
+
+  .docs-sidebar-footer-link + .docs-sidebar-footer-link {
+    @apply border-t border-slate-200;
+  }
+
+  .docs-nav-group + .docs-nav-group {
+    @apply mt-6;
+  }
+
+  .docs-nav-list {
+    @apply flex flex-col gap-px;
+  }
+
+  .docs-nav-link {
+    @apply -mx-2 block rounded px-2 py-1 text-[15px] leading-[21px] text-slate-950 hover:bg-slate-50;
+  }
+
+  .docs-nav-link.active {
+    @apply bg-slate-100;
+  }
+
+  .docs-nav-caption {
+    @apply mb-2 text-[13px] leading-5 tracking-[0.025em] text-slate-600;
+  }
+
+  .docs-main {
+    @apply min-w-0 px-5 py-10 sm:px-10 sm:py-14 xl:px-16;
+  }
+
+  .docs-sidebar-hidden .docs-main {
+    @apply pt-20 lg:pt-14;
+  }
+
+  .docs-article {
+    @apply mx-auto max-w-5xl;
+  }
+
+  /* The docs are one page; each part is a section the sidebar scrolls to. */
+  .docs-part {
+    @apply scroll-mt-10;
+  }
+
+  /* Matches the page's top padding so the first part scrolls to the very top. */
+  .docs-part:first-of-type {
+    @apply scroll-mt-14;
+  }
+
+  /* Dividers only separate the parts; inside a part, space alone separates
+     sections. A pseudo-element draws the divider so it can stop at the
+     prose width instead of spanning the full column. */
+  .docs-part:not(:last-child)::after {
+    content: "";
+    @apply mt-12 block max-w-[720px] border-b border-slate-200;
+  }
+
+  .docs-part + .docs-part {
+    @apply mt-20;
+  }
+
+  .docs-page-header h2 {
+    @apply text-[2.125rem] font-medium leading-[1.1] tracking-tight text-slate-950 sm:text-4xl;
+  }
+
+  .docs-page-intro {
+    @apply mt-5 max-w-[720px] space-y-4 text-[15px] leading-7 text-slate-950;
+  }
+
+  .docs-section {
+    @apply pt-6;
+  }
+
+  .docs-section h3 {
+    @apply text-2xl font-medium tracking-tight text-slate-950;
+  }
+
+  .docs-section > p {
+    @apply mt-3 max-w-[720px] text-[15px] leading-7 text-slate-950;
+  }
+
+  .docs-section > .code-block-shell,
+  .docs-section > .snippet-playground,
+  .docs-section > .table-wrap {
+    @apply mt-6;
+  }
+
+  /* The Quick start's live preview matches the code block above it. */
+  .docs-example-preview {
+    @apply mt-6 max-w-[720px];
+  }
+
+  .docs-list {
+    @apply mt-6 max-w-[720px] list-disc space-y-2 pl-5 text-[15px] leading-7 text-slate-950 marker:text-slate-600;
+  }
+
+  .docs-list strong {
+    @apply font-normal text-slate-950;
+  }
+
+  /* A link in prose keeps the prose color; the underline marks it. */
+  .docs-link {
+    @apply text-slate-950 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-950;
+  }
+
+  .construct-group {
+    @apply scroll-mt-8 pt-8;
+  }
+
+  .construct-group-heading h3 {
+    @apply mt-3 text-3xl font-medium tracking-tight text-slate-950;
+  }
+
+  .construct-group-heading > p:last-child {
+    @apply mt-4 max-w-[720px] text-[15px] leading-7 text-slate-950;
+  }
+
+  .construct-list {
+    @apply mt-8 space-y-8;
+  }
+
+  .construct-item {
+    @apply scroll-mt-8;
+  }
+
+  .construct-item h4 {
+    @apply text-xl font-medium text-slate-950;
+  }
+
+  .construct-description {
+    @apply mt-2 max-w-[720px] space-y-4 text-[15px] leading-7 text-slate-950;
+  }
+
+  .snippet-playground {
+    @apply mt-6 grid items-stretch gap-0 xl:grid-cols-2;
+  }
+
+  .snippet-editor {
+    @apply flex h-[28rem] min-h-0 flex-col overflow-hidden rounded-b-none rounded-t border border-slate-200 bg-slate-100;
+    color-scheme: light;
+  }
+
+  .protected-code-frame {
+    @apply relative flex min-h-0 flex-1 flex-col;
+  }
+
+  /* No vertical wheel scrolling, so the wheel scrolls the page; the scroll
+     buttons move the code instead. */
+  .protected-code {
+    @apply min-h-0 flex-1 overflow-x-auto overflow-y-hidden bg-slate-100;
+  }
+
+  .protected-code-content {
+    width: max(100%, var(--code-width));
+    @apply min-w-full bg-slate-100 py-4 font-mono text-[14px] leading-5;
+  }
+
+  .protected-code-content::after {
+    content: "";
+    display: block;
+    height: var(--code-scroll-space, 0);
+  }
+
+  .protected-code-readonly,
+  .protected-code-editable-highlight,
+  .protected-code-editable-input {
+    font: inherit;
+    line-height: inherit;
+    tab-size: 2;
+    white-space: pre;
+  }
+
+  .protected-code-readonly {
+    @apply m-0 bg-slate-100 px-4 text-slate-700;
+    filter: saturate(0.35);
+    opacity: 0.8;
+  }
+
+  .protected-code code {
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    font-size: inherit;
+  }
+
+  .protected-code-editable-region {
+    /* One 20px code line per editable line. */
+    height: calc(var(--editable-lines) * 20px);
+    @apply relative z-[1] bg-white;
+    box-shadow:
+      0 -3px 9px -6px rgb(71 85 105 / 14%),
+      0 3px 9px -6px rgb(71 85 105 / 14%);
+  }
+
+  .protected-code-editable-highlight,
+  .protected-code-editable-input {
+    padding-left: calc(1rem + var(--code-indent));
+    @apply m-0 h-full w-full overflow-hidden border-0 bg-transparent py-0 pr-4;
+  }
+
+  .protected-code-editable-highlight {
+    @apply pointer-events-none text-slate-800;
+  }
+
+  .protected-code-editable-input {
+    -webkit-text-fill-color: transparent;
+    @apply absolute inset-0 block resize-none text-transparent caret-blue-600 outline-none selection:bg-blue-200/70;
+  }
+
+  .protected-code .token.comment,
+  .protected-code .token.prolog,
+  .protected-code .token.doctype,
+  .protected-code .token.cdata,
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    color: #64748b;
+    font-style: italic;
+  }
+
+  .protected-code .token.keyword,
+  .protected-code .token.atrule,
+  .code-block .token.keyword,
+  .code-block .token.atrule {
+    color: #be123c;
+  }
+
+  .protected-code .token.string,
+  .protected-code .token.char,
+  .protected-code .token.attr-value,
+  .protected-code .token.regex,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.attr-value,
+  .code-block .token.regex {
+    color: #047857;
+  }
+
+  .protected-code .token.number,
+  .protected-code .token.boolean,
+  .protected-code .token.constant,
+  .protected-code .token.symbol,
+  .code-block .token.number,
+  .code-block .token.boolean,
+  .code-block .token.constant,
+  .code-block .token.symbol {
+    color: #b45309;
+  }
+
+  .protected-code .token.function,
+  .protected-code .token.class-name,
+  .protected-code .token.builtin,
+  .code-block .token.function,
+  .code-block .token.class-name,
+  .code-block .token.builtin {
+    color: #6d28d9;
+  }
+
+  .protected-code .token.property,
+  .protected-code .token.tag,
+  .protected-code .token.selector,
+  .protected-code .token.attr-name,
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.selector,
+  .code-block .token.attr-name {
+    color: #1d4ed8;
+  }
+
+  .protected-code .token.operator,
+  .protected-code .token.entity,
+  .protected-code .token.url,
+  .protected-code .token.punctuation,
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.punctuation {
+    color: #475569;
+  }
+
+  .snippet-error {
+    @apply border-t border-red-200 bg-red-50 px-4 py-3 text-[15px] leading-6 text-red-800;
+  }
+
+  .snippet-preview {
+    @apply min-w-0;
+  }
+
+  .snippet-preview > [data-delta-preview] {
+    @apply h-full rounded-b rounded-t-none border-t-0;
+  }
+
+  @media (min-width: 1280px) {
+    .snippet-editor {
+      @apply rounded-l rounded-r-none;
+      contain: size;
+      height: auto;
+    }
+
+    .snippet-preview > [data-delta-preview] {
+      @apply rounded-l-none rounded-r border-l-0 border-t;
+    }
+  }
+
+  .docs-table-heading {
+    @apply mb-3 text-lg font-medium text-slate-950;
+  }
+
+  .table-wrap + .docs-table-heading {
+    @apply mt-8;
+  }
+
+  .table-wrap {
+    @apply overflow-x-auto rounded border border-slate-200;
+  }
+
+  .table-wrap table {
+    @apply w-full min-w-[36rem] border-collapse text-left text-[15px] leading-5;
+  }
+
+  .table-wrap th {
+    @apply bg-slate-50 px-4 py-3 font-medium text-slate-950;
+  }
+
+  .table-wrap td {
+    @apply border-t border-slate-200 px-4 py-3 align-top leading-6 text-slate-950;
+  }
+
+  .code-block {
+    @apply max-h-[34rem] overflow-x-auto overflow-y-hidden rounded border border-slate-200 bg-slate-50 p-5 pr-24 font-mono text-[14px] leading-5 text-slate-800;
+    color-scheme: light;
+  }
+
+  /* Shows a long block in full instead of scrolling. */
+  .code-block-full {
+    @apply max-h-none;
+  }
+
+  .code-block code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .code-block-shell {
+    @apply relative max-w-[720px];
+  }
+
+  /* Small icon buttons that sit on a code box: copy and scroll. */
+  .code-icon-button {
+    @apply inline-flex size-7 items-center justify-center rounded-sm border border-slate-300 p-0 text-slate-600 shadow-sm transition-[color,background-color,border-color,box-shadow,transform,opacity] hover:border-slate-400 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 active:translate-y-px disabled:pointer-events-none disabled:opacity-40;
+    background: linear-gradient(to bottom, #fff, #f1f5f9);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 90%),
+      0 1px 2px rgb(15 23 42 / 12%);
+  }
+
+  .code-copy-button {
+    @apply absolute right-3 top-3 z-10;
+  }
+
+  /* The mouse wheel always scrolls the page, never a code box, so these
+     buttons scroll code that is taller than its box. */
+  .code-scroll-controls {
+    @apply absolute bottom-3 right-3 z-10 flex flex-col gap-1;
+  }
+}
+
+@keyframes video-modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes video-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes operator-drift-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes operator-drift-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes operator-pulse {
+  from {
+    opacity: 0.68;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operator-ascii-row {
+    animation: none;
+    opacity: 0.72;
+    transform: translate3d(-10%, 0, 0);
+    will-change: auto;
+  }
+}
