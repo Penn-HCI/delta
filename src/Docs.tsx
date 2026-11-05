@@ -61,6 +61,7 @@ const referenceLinks: DocsNavLink[] = [
   { id: "value-constructs", label: "Values and computation" },
   { id: "input-constructs", label: "Interactive inputs" },
   { id: "step-constructs", label: "Walkthroughs" },
+  { id: "more-examples", label: "And more!" },
   { id: "construct-reference", label: "Quick reference" },
 ].map((group) => ({
   ...group,
@@ -607,31 +608,6 @@ function QuickStartPart() {
           <ExamplePreview preset="hello-world" />
         </div>
       </section>
-
-      <section className="docs-section">
-        <h3>The parts of the file</h3>
-        <p>To make the formula your own, edit three parts of the config.</p>
-        <ul className="docs-list">
-          <li>
-            <InlineCode>formulas</InlineCode> holds the LaTeX, with an{" "}
-            <InlineCode>id</InlineCode> that the{" "}
-            <InlineCode>Formula</InlineCode> component refers to.
-          </li>
-          <li>
-            <InlineCode>variables</InlineCode> describes the symbols readers see
-            or drag. Each key matches a symbol in the LaTeX exactly, here{" "}
-            <InlineCode>K</InlineCode>, <InlineCode>m</InlineCode>, and{" "}
-            <InlineCode>v</InlineCode>.
-          </li>
-          <li>
-            <InlineCode>semantics</InlineCode> computes the outputs. It reads
-            the inputs as <InlineCode>vars.m</InlineCode> and{" "}
-            <InlineCode>vars.v</InlineCode>, sets{" "}
-            <InlineCode>vars.K</InlineCode>, and reruns whenever an input
-            changes.
-          </li>
-        </ul>
-      </section>
     </>
   );
 }
@@ -910,6 +886,22 @@ function LanguageReferencePart() {
         </div>
       </section>
 
+      <section className="construct-group" id="more-examples">
+        <div className="construct-group-heading">
+          <h3>And more!</h3>
+          <p>
+            This language reference describes some of the most common language
+            constructs. See the{" "}
+            <a className="docs-link" href={playgroundUrl}>
+              playground
+            </a>{" "}
+            for yet more examples that show how you can replace variables with
+            dynamic SVGs, create sets of related formulas, and connect
+            interactive formulas up to interactive charts.
+          </p>
+        </div>
+      </section>
+
       <section className="construct-group" id="construct-reference">
         <div className="construct-group-heading">
           <h3>Quick reference</h3>
@@ -965,19 +957,6 @@ function LanguageReferencePart() {
           </table>
         </div>
       </section>
-
-      <div className="docs-section">
-        <p>
-          This language reference describes some of the most common language
-          constructs. See the{" "}
-          <a className="docs-link" href={playgroundUrl}>
-            playground
-          </a>{" "}
-          for yet more examples that show how you can replace variables with
-          dynamic SVGs, create sets of related formulas, and connect
-          interactive formulas up to interactive charts.
-        </p>
-      </div>
     </>
   );
 }
