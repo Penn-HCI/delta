@@ -23,6 +23,7 @@ import {
   type PlaygroundPreset,
 } from "./components/TutorialPlaygrounds";
 import { SyntaxHighlightedCode } from "./components/SyntaxHighlightedCode";
+import { docsUrl, getDocsPart } from "./routes";
 import { assetUrl, playgroundUrl } from "./site";
 import { tutorialExamples } from "./tutorial-examples";
 
@@ -45,12 +46,12 @@ const pageLinks: DocsNavLink[] = [
   {
     id: "overview",
     label: "Overview",
-    href: "#/getting-started/overview",
+    href: docsUrl("overview"),
   },
   {
     id: "quick-start",
     label: "Quick start",
-    href: "#/getting-started/quick-start",
+    href: docsUrl("quick-start"),
   },
 ];
 
@@ -65,7 +66,7 @@ const referenceLinks: DocsNavLink[] = [
   { id: "construct-reference", label: "Quick reference" },
 ].map((group) => ({
   ...group,
-  href: `#/getting-started/language-reference?section=${group.id}`,
+  href: docsUrl("language-reference", group.id),
 }));
 
 // The sidebar is flat: captions name the groups, and every link sits at one level.
@@ -325,7 +326,7 @@ function DocsSidebar({
       }}
     >
       <div className="docs-sidebar-header">
-        <a className="docs-brand" href="#/">
+        <a className="docs-brand" href={import.meta.env.BASE_URL}>
           <span
             aria-hidden="true"
             className="delta-logo-mark size-8 rounded-lg"
@@ -961,26 +962,11 @@ function LanguageReferencePart() {
   );
 }
 
-// Older addresses: Installation and Config setup became the quick start, and
-// Constructs became the language reference.
-const legacySectionIds: Record<string, string> = {
-  installation: "quick-start",
-  config: "quick-start",
-  constructs: "language-reference",
-  "formula-constructs": "variable-constructs",
-  "computation-constructs": "value-constructs",
-};
-
-// The section a docs address points at: "?section=" wins, then the path.
+// The section a docs address points at: the "#" section wins, then the part
+// in the path. Old "#/" addresses are moved to real paths before this runs
+// (see routes.ts).
 function getTargetId() {
-  const [path, query] = window.location.hash.slice(1).split("?");
-  if (!path.startsWith("/getting-started")) return null;
-
-  const id =
-    new URLSearchParams(query).get("section") ||
-    path.split("/")[2] ||
-    "overview";
-  return legacySectionIds[id] ?? id;
+  return window.location.hash.slice(1) || getDocsPart();
 }
 
 export default function Docs() {
@@ -999,7 +985,7 @@ export default function Docs() {
     );
   }, [sidebarOpen]);
 
-  // Jump to the section in the address on load and on back/forward.
+  // Jump to the section in the address on load and when its "#" changes.
   useEffect(() => {
     const scrollToTarget = () => {
       const id = getTargetId();

@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 
 import { OperatorAsciiBackground } from "./components/OperatorAsciiBackground";
 import { UnderConstruction } from "./components/UnderConstruction";
 import { VideoModal } from "./components/VideoModal";
 import { ZoomableImage } from "./components/ZoomableImage";
+import { docsUrl, getDocsPart } from "./routes";
 import {
   assetUrl,
   playgroundUrl,
@@ -25,7 +26,7 @@ const resourceLinks: Array<{
   href?: string;
   opensVideo?: boolean;
 }> = [
-  { label: "Getting started", href: "#/getting-started/overview" },
+  { label: "Getting started", href: docsUrl("overview") },
   { label: "Read the paper", href: assetUrl("paper.pdf") },
   { label: "Watch the demo video", opensVideo: true },
   { label: "Go to Playground", href: playgroundUrl },
@@ -136,30 +137,10 @@ function ResourceLinks({ onOpenVideo }: { onOpenVideo: () => void }) {
   );
 }
 
+// Each page has its own path, and links between them load the page fresh, so
+// the route never changes while a page is open.
 function getRoute(): Route {
-  const path = window.location.hash.slice(1).split("?")[0];
-
-  // The docs are one page; it scrolls to the section named in the path.
-  if (path === "/getting-started" || path.startsWith("/getting-started/")) {
-    return "docs";
-  }
-  return "home";
-}
-
-function useRoute() {
-  const [route, setRoute] = useState<Route>(getRoute);
-
-  useEffect(() => {
-    const update = () => {
-      const next = getRoute();
-      setRoute(next);
-      if (next === "home") window.scrollTo(0, 0);
-    };
-    window.addEventListener("hashchange", update);
-    return () => window.removeEventListener("hashchange", update);
-  }, []);
-
-  return route;
+  return getDocsPart() === null ? "home" : "docs";
 }
 
 function HomePage() {
@@ -226,7 +207,7 @@ function Footer() {
 }
 
 export default function App() {
-  const route = useRoute();
+  const route = getRoute();
 
   if (underConstruction) return <UnderConstruction />;
 
