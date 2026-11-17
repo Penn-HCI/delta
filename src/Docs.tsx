@@ -4,9 +4,9 @@ import {
   ChevronRight,
   Copy,
   Github,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
   TreePalm,
+  X,
 } from "lucide-react";
 import {
   useEffect,
@@ -14,6 +14,7 @@ import {
   useState,
   type MouseEvent,
   type ReactNode,
+  type RefObject,
 } from "react";
 
 import { ScrollControls } from "./components/ScrollControls";
@@ -36,11 +37,12 @@ type ConstructItemProps = {
   title: string;
 };
 
-const desktopSidebarWidth = 260;
-const sidebarToggleProximity = 72;
-const sidebarToggleVerticalMargin = 28;
-// Hiding the sidebar is switched off for now; set to true to bring the controls back.
-const sidebarCollapseEnabled = false;
+// The desktop sidebar can be hidden to give the page its width; set to false
+// to take the controls away.
+const sidebarCollapseEnabled = true;
+// From this width up the sidebar sits beside the page. Below it, the sidebar is
+// a drawer opened from the top bar. Matches the "lg" breakpoint in index.css.
+const desktopQuery = "(min-width: 1024px)";
 
 const pageLinks: DocsNavLink[] = [
   {
@@ -289,14 +291,36 @@ function CodeBlock({
   );
 }
 
+function DocsBrand() {
+  return (
+    <a className="docs-brand" href={import.meta.env.BASE_URL}>
+      <span aria-hidden="true" className="delta-logo-mark size-8 rounded-lg">
+        <img
+          alt=""
+          className="h-[18px] w-auto"
+          src={assetUrl("delta-mark.svg")}
+        />
+      </span>
+      <strong>Documentation</strong>
+    </a>
+  );
+}
+
 function DocsSidebar({
   activeSection,
+  closeRef,
+  drawer,
+  drawerOpen,
   hidden,
-  onHide,
+  onCloseDrawer,
 }: {
   activeSection: string;
+  closeRef: RefObject<HTMLButtonElement>;
+  // Below the desktop width the sidebar is a drawer, closed until asked for.
+  drawer: boolean;
+  drawerOpen: boolean;
   hidden: boolean;
-  onHide: () => void;
+  onCloseDrawer: () => void;
 }) {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -313,48 +337,38 @@ function DocsSidebar({
       "",
       event.currentTarget.getAttribute("href"),
     );
+    onCloseDrawer();
     scrollTo(id);
   };
 
+  const unavailable = drawer ? !drawerOpen : hidden;
+
   return (
     <aside
-      aria-hidden={hidden}
+      aria-hidden={unavailable}
+      aria-label="Documentation"
       className={`docs-sidebar ${hidden ? "docs-sidebar-collapsed" : ""}`}
+      data-open={drawer && drawerOpen}
       id="docs-sidebar"
       ref={(node) => {
-        node?.toggleAttribute("inert", hidden);
+        node?.toggleAttribute("inert", unavailable);
       }}
     >
       <div className="docs-sidebar-header">
-        <a className="docs-brand" href={import.meta.env.BASE_URL}>
-          <span
-            aria-hidden="true"
-            className="delta-logo-mark size-8 rounded-lg"
-          >
-            <img
-              alt=""
-              className="h-[18px] w-auto"
-              src={assetUrl("delta-mark.svg")}
-            />
-          </span>
-          <strong>Documentation</strong>
-        </a>
-        {sidebarCollapseEnabled && (
-          <button
-            aria-controls="docs-sidebar"
-            aria-expanded="true"
-            aria-label="Hide sidebar"
-            className="docs-sidebar-toggle docs-sidebar-static-toggle"
-            onClick={onHide}
-            title="Hide sidebar"
-            type="button"
-          >
-            <PanelLeftClose aria-hidden="true" size={17} strokeWidth={1.75} />
-          </button>
-        )}
+        <DocsBrand />
+        <button
+          aria-label="Close navigation"
+          className="docs-menu-button docs-drawer-close"
+          onClick={onCloseDrawer}
+          ref={closeRef}
+          title="Close navigation"
+          type="button"
+        >
+          <X aria-hidden="true" size={18} strokeWidth={1.75} />
+        </button>
       </div>
 
-      <nav className="-mx-5 mt-5 border-t border-slate-200 px-5 pb-6 pt-6 lg:-mx-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-6">
+      <nav className="docs-nav">
         {navGroups.map((group) => (
           <div className="docs-nav-group" key={group.caption}>
             <p className="docs-nav-caption">{group.caption}</p>
@@ -401,91 +415,16 @@ function DocsSidebar({
   );
 }
 
-function SidebarBoundaryToggle({
+// The one control for hiding and showing the desktop sidebar. It stays just
+// outside the sidebar's top right corner, and at the page's top left while
+// the sidebar is hidden.
+function SidebarToggle({
   open,
   onToggle,
 }: {
   open: boolean;
   onToggle: () => void;
 }) {
-  const [visible, setVisible] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const pointerFrame = useRef<number>();
-
-  useEffect(() => {
-    const finePointerQuery = window.matchMedia(
-      "(hover: hover) and (pointer: fine)",
-    );
-
-    const cancelPointerFrame = () => {
-      if (pointerFrame.current === undefined) return;
-      window.cancelAnimationFrame(pointerFrame.current);
-      pointerFrame.current = undefined;
-    };
-
-    const hideToggle = () => {
-      cancelPointerFrame();
-      setVisible(false);
-    };
-
-    const trackPointer = (event: PointerEvent) => {
-      const { clientX, clientY, pointerType } = event;
-      cancelPointerFrame();
-
-      pointerFrame.current = window.requestAnimationFrame(() => {
-        pointerFrame.current = undefined;
-
-        if (
-          pointerType !== "mouse" ||
-          window.innerWidth < 1024 ||
-          !finePointerQuery.matches
-        ) {
-          setVisible(false);
-          return;
-        }
-
-        const boundaryX = open ? desktopSidebarWidth : 0;
-        if (Math.abs(clientX - boundaryX) > sidebarToggleProximity) {
-          setVisible(false);
-          return;
-        }
-
-        const maximumY = Math.max(
-          sidebarToggleVerticalMargin,
-          window.innerHeight - sidebarToggleVerticalMargin,
-        );
-        const toggleY = Math.min(
-          Math.max(clientY, sidebarToggleVerticalMargin),
-          maximumY,
-        );
-
-        buttonRef.current?.style.setProperty(
-          "--docs-sidebar-toggle-y",
-          `${toggleY}px`,
-        );
-        setVisible(true);
-      });
-    };
-
-    window.addEventListener("pointermove", trackPointer, { passive: true });
-    window.addEventListener("blur", hideToggle);
-    window.addEventListener("resize", hideToggle);
-    finePointerQuery.addEventListener("change", hideToggle);
-    document.documentElement.addEventListener("pointerleave", hideToggle);
-
-    return () => {
-      cancelPointerFrame();
-      window.removeEventListener("pointermove", trackPointer);
-      window.removeEventListener("blur", hideToggle);
-      window.removeEventListener("resize", hideToggle);
-      finePointerQuery.removeEventListener("change", hideToggle);
-      document.documentElement.removeEventListener(
-        "pointerleave",
-        hideToggle,
-      );
-    };
-  }, [open]);
-
   const label = open ? "Hide sidebar" : "Show sidebar";
 
   return (
@@ -493,23 +432,15 @@ function SidebarBoundaryToggle({
       aria-controls="docs-sidebar"
       aria-expanded={open}
       aria-label={label}
-      className={`docs-sidebar-toggle docs-sidebar-boundary-toggle ${
-        visible ? "is-visible" : ""
-      }`}
-      onBlur={() => setVisible(false)}
-      onClick={() => {
-        setVisible(false);
-        onToggle();
-      }}
-      onFocus={() => setVisible(true)}
-      ref={buttonRef}
+      className="docs-sidebar-toggle"
+      onClick={onToggle}
       title={label}
       type="button"
     >
       {open ? (
-        <ChevronLeft aria-hidden="true" size={15} strokeWidth={1.75} />
+        <ChevronLeft aria-hidden="true" size={16} strokeWidth={1.75} />
       ) : (
-        <ChevronRight aria-hidden="true" size={15} strokeWidth={1.75} />
+        <ChevronRight aria-hidden="true" size={16} strokeWidth={1.75} />
       )}
     </button>
   );
@@ -976,6 +907,45 @@ export default function Docs() {
       window.localStorage.getItem("delta-docs-sidebar") !== "hidden",
   );
   const [activeSection, setActiveSection] = useState("overview");
+  const [isDesktop, setIsDesktop] = useState(
+    () => window.matchMedia(desktopQuery).matches,
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  const drawerWasOpen = useRef(false);
+  const drawerShown = drawerOpen && !isDesktop;
+
+  // Widening to the desktop layout puts the drawer away.
+  useEffect(() => {
+    const query = window.matchMedia(desktopQuery);
+    const update = () => {
+      setIsDesktop(query.matches);
+      if (query.matches) setDrawerOpen(false);
+    };
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  // Opening the drawer moves focus into it; closing hands focus back to the
+  // menu button. Escape closes it.
+  useEffect(() => {
+    if (!drawerShown) {
+      if (drawerWasOpen.current) {
+        menuButtonRef.current?.focus({ preventScroll: true });
+      }
+      drawerWasOpen.current = false;
+      return;
+    }
+
+    drawerWasOpen.current = true;
+    drawerCloseRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [drawerShown]);
 
   useEffect(() => {
     if (!sidebarCollapseEnabled) return;
@@ -1030,31 +1000,53 @@ export default function Docs() {
 
   return (
     <div className={`docs-shell ${sidebarOpen ? "" : "docs-sidebar-hidden"}`}>
-      <DocsSidebar
-        activeSection={activeSection}
-        hidden={!sidebarOpen}
-        onHide={() => setSidebarOpen(false)}
+      {/* Phones and tablets: a bar that stays at the top and opens the drawer. */}
+      <header
+        className="docs-topbar"
+        ref={(node) => {
+          node?.toggleAttribute("inert", drawerShown);
+        }}
+      >
+        <DocsBrand />
+        <button
+          aria-controls="docs-sidebar"
+          aria-expanded={drawerShown}
+          aria-label="Open navigation"
+          className="docs-menu-button"
+          onClick={() => setDrawerOpen(true)}
+          ref={menuButtonRef}
+          title="Open navigation"
+          type="button"
+        >
+          <Menu aria-hidden="true" size={18} strokeWidth={1.75} />
+        </button>
+      </header>
+      <div
+        aria-hidden="true"
+        className="docs-drawer-backdrop"
+        data-open={drawerShown}
+        onClick={() => setDrawerOpen(false)}
       />
       {sidebarCollapseEnabled && (
-        <SidebarBoundaryToggle
+        <SidebarToggle
           onToggle={() => setSidebarOpen((open) => !open)}
           open={sidebarOpen}
         />
       )}
-      <main className="docs-main">
-        {!sidebarOpen && (
-          <button
-            aria-controls="docs-sidebar"
-            aria-expanded="false"
-            aria-label="Show sidebar"
-            className="docs-sidebar-restore docs-sidebar-static-restore"
-            onClick={() => setSidebarOpen(true)}
-            title="Show sidebar"
-            type="button"
-          >
-            <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.75} />
-          </button>
-        )}
+      <DocsSidebar
+        activeSection={activeSection}
+        closeRef={drawerCloseRef}
+        drawer={!isDesktop}
+        drawerOpen={drawerOpen}
+        hidden={!sidebarOpen}
+        onCloseDrawer={() => setDrawerOpen(false)}
+      />
+      <main
+        className="docs-main"
+        ref={(node) => {
+          node?.toggleAttribute("inert", drawerShown);
+        }}
+      >
         <div className="docs-article">
           <h1 className="sr-only">Delta documentation</h1>
           <section className="docs-part" id="overview">

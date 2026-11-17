@@ -14,6 +14,19 @@
     overflow: hidden;
   }
 
+  /* Below the desktop width the docs have a top bar that stays in place:
+     sections scroll to just under it, and the page holds still behind the
+     open drawer. */
+  @media (max-width: 1023.98px) {
+    html:has(.docs-topbar) {
+      scroll-padding-top: 3.5rem;
+    }
+
+    html:has(.docs-sidebar[data-open="true"]) {
+      overflow: hidden;
+    }
+  }
+
   body {
     @apply m-0 bg-white font-sans text-slate-900 antialiased;
   }
@@ -282,32 +295,100 @@
     @apply lg:grid-cols-[0_minmax(0,1fr)];
   }
 
+  /* Below the desktop width: a bar that stays at the top, with the button
+     that opens the sidebar as a drawer. */
+  .docs-topbar {
+    @apply sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 sm:px-10 lg:hidden;
+  }
+
+  /* Opens and closes the drawer, from the bar's right end. Its box sits as
+     far from the right edge as the logo sits from the left. The box is the
+     logo's size, 32px; the ::after widens the area that takes a tap to
+     44px. */
+  .docs-menu-button {
+    @apply relative inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+  }
+
+  .docs-menu-button::after {
+    content: "";
+    @apply absolute -inset-1.5;
+  }
+
+  .docs-drawer-close {
+    @apply lg:hidden;
+  }
+
+  .docs-drawer-backdrop {
+    @apply pointer-events-none fixed inset-0 z-40 bg-slate-950/40 opacity-0 transition-opacity duration-200 lg:hidden;
+  }
+
+  .docs-drawer-backdrop[data-open="true"] {
+    @apply pointer-events-auto opacity-100;
+  }
+
   .docs-sidebar {
-    @apply flex flex-col border-b border-slate-200 bg-white px-5 py-5 lg:sticky lg:px-6 lg:top-0 lg:z-20 lg:h-screen lg:border-b-0 lg:border-r lg:pb-8 lg:pt-5;
-    transition:
-      opacity 180ms ease,
-      transform 300ms ease;
+    @apply flex flex-col border-r border-slate-200 bg-white px-6 pb-8 pt-5;
   }
 
-  .docs-sidebar.docs-sidebar-collapsed {
-    @apply hidden;
-  }
-
+  /* Desktop: a column beside the page. */
   @media (min-width: 1024px) {
     .docs-sidebar {
+      @apply sticky top-0 z-20 h-screen;
       width: 260px;
+      transition:
+        opacity 180ms ease,
+        transform 300ms ease;
     }
 
     .docs-sidebar.docs-sidebar-collapsed {
-      display: flex;
       opacity: 0;
       pointer-events: none;
       transform: translateX(-100%);
     }
   }
 
+  /* Below the desktop width: a drawer that slides in from the right, the
+     menu button's side, over the page. It stays out of reach (not just out
+     of sight) while closed. */
+  @media (max-width: 1023.98px) {
+    .docs-sidebar {
+      @apply fixed inset-y-0 right-0 z-50 border-l border-r-0 pt-0;
+      width: min(20rem, calc(100vw - 3rem));
+      overscroll-behavior: contain;
+      transform: translateX(100%);
+      visibility: hidden;
+      transition:
+        transform 250ms ease,
+        visibility 0s linear 250ms;
+    }
+
+    .docs-sidebar[data-open="true"] {
+      @apply shadow-xl;
+      transform: none;
+      visibility: visible;
+      transition:
+        transform 250ms ease,
+        visibility 0s;
+    }
+
+    /* The drawer's header is as tall as the top bar it covers. */
+    .docs-sidebar-header {
+      @apply h-14;
+    }
+  }
+
+  @media (max-width: 1023.98px) and (prefers-reduced-motion: reduce) {
+    .docs-sidebar,
+    .docs-sidebar[data-open="true"],
+    .docs-drawer-backdrop {
+      transition: none;
+    }
+  }
+
+  /* The row reaches 8px past the sidebar's padding on both sides, like the
+     nav items, so the logo tile lines up with the items' boxes below it. */
   .docs-sidebar-header {
-    @apply flex items-center justify-between gap-3;
+    @apply -mx-2 flex shrink-0 items-center justify-between gap-3;
   }
 
   .docs-brand {
@@ -318,63 +399,42 @@
     @apply truncate text-base font-medium leading-none;
   }
 
-  .docs-sidebar-toggle,
-  .docs-sidebar-restore {
-    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
-  }
+  /* Hides and shows the desktop sidebar. It sits outside the sidebar, just
+     past its right edge and level with the logo, in the gutter beside the
+     page's text, so it never covers the text. While the sidebar is hidden
+     it sits in the same gutter at the page's left edge. Below the desktop
+     width the sidebar is a drawer, so the button is not shown. */
+  .docs-sidebar-toggle {
+    --docs-sidebar-toggle-gap: 4px;
 
-  .docs-sidebar-restore {
-    @apply fixed left-4 top-4 z-30;
-  }
-
-  .docs-sidebar-boundary-toggle {
-    --docs-sidebar-toggle-y: 50vh;
-
-    @apply fixed z-40 hidden size-8;
-    left: 260px;
-    top: var(--docs-sidebar-toggle-y);
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(0);
-    transform-origin: center;
-    will-change: top, transform, opacity;
+    @apply fixed top-5 z-30 hidden size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 lg:inline-flex;
+    left: calc(260px + var(--docs-sidebar-toggle-gap));
     transition:
       left 300ms ease-out,
-      top 90ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 110ms ease-out,
-      transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      color 150ms,
+      background-color 150ms,
+      border-color 150ms;
   }
 
-  .docs-sidebar-hidden .docs-sidebar-boundary-toggle {
-    left: 24px;
-  }
-
-  .docs-sidebar-boundary-toggle.is-visible,
-  .docs-sidebar-boundary-toggle:focus-visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
-    .docs-sidebar-boundary-toggle {
-      display: inline-flex;
+  /* The gutter is 40px wide up to 1280px and 64px from there. */
+  @media (min-width: 1280px) {
+    .docs-sidebar-toggle {
+      --docs-sidebar-toggle-gap: 12px;
     }
+  }
 
-    .docs-sidebar-static-toggle,
-    .docs-sidebar-static-restore {
-      display: none;
-    }
+  .docs-sidebar-hidden .docs-sidebar-toggle {
+    left: var(--docs-sidebar-toggle-gap);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .docs-sidebar-boundary-toggle {
-      transition: opacity 110ms linear;
+    .docs-sidebar-toggle {
+      transition: none;
     }
   }
 
   .docs-sidebar-footer {
-    @apply relative -mx-6 -mb-8 mt-auto hidden border-t border-slate-200 lg:block;
+    @apply relative -mx-6 -mb-8 mt-auto shrink-0 border-t border-slate-200;
   }
 
   .docs-sidebar-footer-links {
@@ -389,6 +449,12 @@
     @apply border-t border-slate-200;
   }
 
+  /* The links scroll on their own when they don't fit between the header
+     and the footer. */
+  .docs-nav {
+    @apply -mx-6 min-h-0 flex-1 overflow-y-auto border-t border-slate-200 px-6 pb-6 pt-6 lg:mt-5;
+  }
+
   .docs-nav-group + .docs-nav-group {
     @apply mt-6;
   }
@@ -397,8 +463,9 @@
     @apply flex flex-col gap-px;
   }
 
+  /* Below the desktop width, links are 45px tall for tapping. */
   .docs-nav-link {
-    @apply -mx-2 block rounded px-2 py-1 text-[15px] leading-[21px] text-slate-950 hover:bg-slate-50;
+    @apply -mx-2 block rounded px-2 py-1 text-[15px] leading-[21px] text-slate-950 hover:bg-slate-50 max-lg:py-3;
   }
 
   .docs-nav-link.active {
@@ -414,7 +481,7 @@
   }
 
   .docs-sidebar-hidden .docs-main {
-    @apply pt-20 lg:pt-14;
+    @apply lg:pt-14;
   }
 
   .docs-article {

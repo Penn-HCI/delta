@@ -115,11 +115,47 @@ snippet playgrounds span the full article column, up to 1024px
 
 - Structure: each `.docs-nav-group` is a `.docs-nav-caption` followed by a
   `.docs-nav-list` of `.docs-nav-link` items. Groups are 24px apart.
+- Top row: the logo tile's left edge lines up with the left edge of the nav
+  items' boxes, 16px inside the sidebar (`.docs-sidebar-header`).
 - Item: 4px vertical and 8px horizontal padding, 4px radius, 1px gap between
   items.
 - Hover: slate-50 background.
 - Active: slate-100 background. The text stays slate-950 at weight 400, so
   the background alone marks the active item.
+
+### Hiding the sidebar (1024px and up)
+
+- One button (`.docs-sidebar-toggle`) hides and shows the sidebar. It is 32px
+  square with a 16px chevron, and it does not move with the mouse.
+- It sits outside the sidebar, just past its right edge and level with the
+  logo, in the gutter beside the page's text: 4px from the sidebar up to
+  1280px wide, 12px from there. It never covers the text.
+- Hiding slides the whole sidebar off to the left, and the page takes the
+  freed width. The button moves to the same gutter at the page's left edge
+  and its chevron turns to point right.
+- The choice is remembered in the browser. `sidebarCollapseEnabled` in
+  `src/Docs.tsx` switches the button on and off.
+- Below 1024px the button is not shown; the sidebar is a drawer there.
+
+### Navigation below 1024px
+
+- Top bar: `.docs-topbar` is 56px tall and stays at the top of the page, with
+  a slate-200 bottom border. It holds the logo with "Documentation" on the
+  left and the menu button on the right. Sections scroll to just under it.
+- Even insets: the logo and the menu button sit equally far from the bar's
+  edges (20px, or 40px from 640px wide), the same as the page's text. In the
+  drawer's header the logo and the close button sit 16px inside the drawer,
+  in line with the two edges of the nav items' boxes.
+- Drawer: the sidebar slides in from the right over the page, 320px wide (or
+  the screen's width less 48px, if that is narrower), with a slate-950
+  backdrop at 40% behind it. Its header matches the top bar's height. It
+  closes on the close button, a tap on the backdrop, Escape, or a tap on a
+  nav link.
+- Buttons: the menu and close buttons (`.docs-menu-button`) are 32px square,
+  the logo's size, with a slate-200 border, a white background, a slate-950
+  icon, and a slate-50 hover background. Taps register 6px beyond the box on
+  every side.
+- Tap sizes: nav items have 12px vertical padding, making them 45px tall.
 
 ### Scrolling
 
@@ -154,6 +190,7 @@ walkthroughs, set per example with `formulaHeight` in
 | Borders and dividers | slate-200 |
 | Active nav item, inline code background | slate-100 |
 | Nav hover, table header background, code block background | slate-50 |
+| Backdrop behind the open nav drawer | slate-950 at 40% |
 
 ### Corner radii
 
@@ -164,7 +201,7 @@ walkthroughs, set per example with `formulaHeight` in
 | Live example preview (`DeltaPreview`) | 4px |
 | Code copy and scroll buttons (`.code-icon-button`) | 2px |
 | Inline code chips | 6px |
-| Logo mark, sidebar toggle buttons | 8px |
+| Logo mark, sidebar toggle buttons, menu and drawer close buttons | 8px |
 | Zoomed image in the lightbox (`.lightbox-image`), demo video in its modal (`.video-modal-player`) | 12px |
 | Homepage image (`.zoomable-thumbnail` outside the docs) | 16px |
 
@@ -181,8 +218,7 @@ These don't follow the rules above yet, or are deliberately outside them.
 - Snippet error messages are red (`.snippet-error` 15px red-800;
   `DeltaPreview` errors 14px red-700).
 - The sidebar wordmark "Documentation" is 16px, weight 500.
-- The sidebar hide/show toggle icon is slate-500. The toggle is switched off
-  (`sidebarCollapseEnabled` in `src/Docs.tsx`).
+- The sidebar hide/show toggle icon is slate-500.
 - The homepage hasn't been brought in line with the docs page rules. Its
   default text is slate-900, the hero paragraph is 16px slate-700, resource
   links are 16px blue-600, pending links are slate-400, and the "soon" pill is
