@@ -11,7 +11,7 @@
   "dependencies": {
     "@xyflow/react": "^12.8.2",
     "d3": "^7.9.0",
-    "delta-dsl": "^0.0.2",
+    "delta-dsl": "^0.0.3",
     "katex": "^0.16.11",
     "lucide-react": "^0.400.0",
     "mobx": "^6.12.3",
